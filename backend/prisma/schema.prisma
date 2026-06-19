@@ -18,6 +18,7 @@ model User {
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
   refreshTokens      RefreshToken[]
+  employeeProfiles   EmployeeProfile[]
 
   @@map("users")
 }
@@ -54,4 +55,59 @@ model RefreshToken {
   user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("refresh_tokens")
+}
+
+model Department {
+  id               Int               @id @default(autoincrement())
+  departmentName   String            @map("department_name") @db.VarChar(100)
+  employeeProfiles EmployeeProfile[]
+
+  @@map("departments")
+}
+
+model EmployeeProfile {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  departmentId Int       @map("department_id")
+  phone        String?   @db.VarChar(20)
+  address      String?
+  designation  String?   @db.VarChar(100)
+  salary       Decimal?  @db.Decimal(10, 2)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     Department      @relation(fields: [departmentId], references: [id])
+  images         EmployeeImage[]
+  employeeSkills EmployeeSkill[]
+
+  @@map("employee_profiles")
+}
+
+model EmployeeImage {
+  id         Int    @id @default(autoincrement())
+  employeeId Int    @map("employee_id")
+  imageUrl   String @map("image_url")
+
+  employee EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_images")
+}
+
+model Skill {
+  id             Int             @id @default(autoincrement())
+  skillName      String          @map("skill_name") @db.VarChar(100)
+  employeeSkills EmployeeSkill[]
+
+  @@map("skills")
+}
+
+model EmployeeSkill {
+  id         Int @id @default(autoincrement())
+  employeeId Int @map("employee_id")
+  skillId    Int @map("skill_id")
+
+  employee EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  skill    Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@map("employee_skills")
 }
