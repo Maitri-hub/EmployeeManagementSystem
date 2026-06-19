@@ -4,9 +4,8 @@ import { setUser as setReduxUser, logoutUser } from "../redux/authSlice";
 
 const AuthContext = createContext(null);
 
-const AUTH_API_URL = "http://localhost:5000/api/auth";
-const USER_API_URL = "http://localhost:5000/api/user";
-
+const AUTH_API_URL = "https://employeemanagementsystem-lplz.onrender.com/api/auth";
+const USER_API_URL = "https://employeemanagementsystem-lplz.onrender.com/api/user";
 function buildUser(userData) {
   const name = userData?.name || "Employee";
 
