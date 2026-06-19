@@ -114,3 +114,53 @@ exports.updateEmployee = async (req, res) => {
     res.status(500).json({ message: "Failed to update employee", error: error.message });
   }
 };
+
+exports.getEmployeeDepartments = async (req, res) => {
+  try {
+    const data = await prisma.employeeProfile.findMany({
+      include: {
+        user: true,
+        department: true,
+      },
+    });
+
+    const result = data.map((item) => ({
+      employeeName: item.user.name,
+      department: item.department.departmentName,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch employee departments",
+      error: error.message,
+    });
+  }
+};
+
+exports.getEmployeeSkills = async (req, res) => {
+  try {
+    const data = await prisma.employeeSkill.findMany({
+      include: {
+        employee: {
+          include: {
+            user: true,
+          },
+        },
+        skill: true,
+      },
+    });
+
+    const result = data.map((item) => ({
+      employeeName: item.employee.user.name,
+      skill: item.skill.skillName,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch employee skills",
+      error: error.message,
+    });
+  }
+};
