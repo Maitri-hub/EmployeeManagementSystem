@@ -6,12 +6,16 @@ const userRoutes = require("./routes/user");
 const authRoutes = require("./routes/auth");
 const departmentRoutes = require("./routes/departmentRoutes");
 const skillRoutes = require("./routes/skillRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/employees/upload", uploadRoutes);
 
 app.get("/", (req, res) => {
   res.send("Employee Management Backend is running");
