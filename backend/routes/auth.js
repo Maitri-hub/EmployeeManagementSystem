@@ -7,6 +7,12 @@ const prisma = require("../config/prisma");
 
 const router = express.Router();
 
+const BACKEND_URL =
+  process.env.BACKEND_URL || "https://employeemanagementsystem-lplz.onrender.com";
+
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://employee-management-system-lake-delta.vercel.app";
+
 // SIGNUP - Prisma version
 router.post("/signup", async (req, res) => {
   try {
@@ -57,7 +63,7 @@ router.post("/signup", async (req, res) => {
       message: "User registered successfully. Please verify your email.",
       user: newUser,
       verificationToken,
-      verificationLink: `http://localhost:5173/verify-email/${verificationToken}`,
+      verificationLink: `${BACKEND_URL}/api/auth/verify-email/${verificationToken}`,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -221,7 +227,7 @@ router.get("/verify-email/:token", async (req, res) => {
     );
 
     res.json({
-      message: "Email verified successfully",
+      message: "Email verified successfully. You can now login.",
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -260,7 +266,7 @@ router.post("/forgot-password", async (req, res) => {
     res.json({
       message: "Password reset token generated",
       resetToken,
-      resetLink: `http://localhost:5173/reset-password/${resetToken}`,
+      resetLink: `${FRONTEND_URL}/reset-password/${resetToken}`,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
