@@ -32,6 +32,27 @@ router.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
+router.get("/all", authMiddleware, authorize("admin"), async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        verified: true,
+      },
+      orderBy: {
+        id: "asc",
+      },
+    });
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch users", error: error.message });
+  }
+});
+
 router.get("/admin", authMiddleware, authorize("admin"), (req, res) => {
   res.json({
     message: "Welcome Admin! You have access to this route.",

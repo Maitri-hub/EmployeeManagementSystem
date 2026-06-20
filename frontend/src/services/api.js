@@ -138,3 +138,6 @@ export async function uploadEmployeeFiles(employeeId, files) {
 }
 
 export default BASE_URL;
+
+export const getUsers = () =>
+  request('/api/user/all');
