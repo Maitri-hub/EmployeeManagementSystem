@@ -9,6 +9,7 @@ import Profile        from '../components/Layout/Profile';
 import Settings       from '../components/Layout/Settings';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute    from './PublicRoute';
+import EmployeeList from '../components/Employee/EmployeeList';
 
 /* Page-level fade + slide transition wrapper */
 const PageTransition = ({ children }) => (
@@ -72,6 +73,11 @@ export default function AppRouter() {
             <PageTransition><Dashboard /></PageTransition>
           </ProtectedRoute>
         } />
+        <Route path="/employees" element={
+          <ProtectedRoute>
+            <PageTransition><EmployeeList /></PageTransition>
+          </ProtectedRoute>
+        } />
         <Route path="/profile" element={
           <ProtectedRoute>
             <PageTransition><Profile /></PageTransition>
@@ -89,3 +95,4 @@ export default function AppRouter() {
     </AnimatePresence>
   );
 }
+
