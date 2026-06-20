@@ -10,6 +10,8 @@ import Settings       from '../components/Layout/Settings';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute    from './PublicRoute';
 import EmployeeList from '../components/Employee/EmployeeList';
+import CreateEmployee from '../components/Employee/CreateEmployee';
+import EditEmployee from '../components/Employee/EditEmployee';
 
 /* Page-level fade + slide transition wrapper */
 const PageTransition = ({ children }) => (
@@ -78,9 +80,19 @@ export default function AppRouter() {
             <PageTransition><EmployeeList /></PageTransition>
           </ProtectedRoute>
         } />
-        <Route path="/profile" element={
+        <Route path="/employees/create" element={
+        <ProtectedRoute>
+          <PageTransition><CreateEmployee /></PageTransition>
+        </ProtectedRoute>
+      } />
+        <Route path="/employees/edit/:id" element={
+        <ProtectedRoute>
+          <PageTransition><EditEmployee /></PageTransition>
+        </ProtectedRoute>
+      } />
+        <Route path="/employees/:id/edit" element={
           <ProtectedRoute>
-            <PageTransition><Profile /></PageTransition>
+            <PageTransition><EditEmployee /></PageTransition>
           </ProtectedRoute>
         } />
         <Route path="/settings" element={

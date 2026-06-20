@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthBackground from "../UI/AuthBackground";
 import { useAuth } from "../../context/AuthContext";
 
@@ -10,6 +10,7 @@ function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -18,7 +19,9 @@ function Login() {
     }
 
     await login(email, password);
-    navigate("/dashboard");
+
+    const redirectPath = location.state?.from?.pathname || "/dashboard";
+    navigate(redirectPath, { replace: true });
   };
 
   return (
@@ -77,8 +80,7 @@ function Login() {
         </button>
 
         <p className="auth-footer">
-          Don’t have an account?{" "}
-          <Link to="/signup">Create account</Link>
+          Don’t have an account? <Link to="/signup">Create account</Link>
         </p>
       </div>
     </div>
