@@ -346,9 +346,18 @@ export default function EmployeeForm() {
       }
 
       if (files.length && savedId) {
-        await uploadEmployeeFiles(savedId, files);
-        push(`${files.length} file(s) uploaded.`, "success");
-      }
+  try {
+   uploadEmployeeFiles(savedId, files)
+  .then(() => {
+    push(`${files.length} file(s) uploaded.`, "success");
+  })
+  .catch((uploadError) => {
+    push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
+  });
+  } catch (uploadError) {
+    push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
+  }
+}
 
       navigate("/employees");
     } catch (error) {
