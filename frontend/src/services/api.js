@@ -44,6 +44,17 @@ export const createDepartment = (data) =>
     body: JSON.stringify(data),
   });
 
+  export const updateDepartment = (id, data) =>
+  request(`/api/departments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const deleteDepartment = (id) =>
+  request(`/api/departments/${id}`, {
+    method: "DELETE",
+  });
+
 export const getSkills = () =>
   request("/api/skills");
 
@@ -51,6 +62,17 @@ export const createSkill = (data) =>
   request("/api/skills", {
     method: "POST",
     body: JSON.stringify(data),
+  });
+
+  export const updateSkill = (id, data) =>
+  request(`/api/skills/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const deleteSkill = (id) =>
+  request(`/api/skills/${id}`, {
+    method: "DELETE",
   });
 
 export const getEmployees = () =>
