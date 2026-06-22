@@ -12,6 +12,10 @@ exports.uploadEmployeeFiles = async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
+    console.log("EMPLOYEE ID:", req.body.employeeId);
+    console.log("FILES:", req.files);
+    console.log("FILES COUNT:", req.files?.length);
+    
     const filesData = req.files.map((file) => ({
       employeeId: Number(employeeId),
       imageUrl: `/uploads/${file.filename}`,
