@@ -1,4 +1,4 @@
- import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import {
@@ -31,6 +31,8 @@ import {
 import { useToast } from "../../context/ToastContext";
 import Navbar from "../Layout/Navbar";
 import AuthBackground from "../UI/AuthBackground";
+
+const API_URL = "https://employeemanagementsystem-lplz.onrender.com";
 
 const GLASS = {
   background: "var(--bg-card)",
@@ -71,12 +73,7 @@ function Field({ id, label, icon: Icon, error, children }) {
 
       <AnimatePresence>
         {error && (
-          <motion.p
-            className="error-msg"
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.p className="error-msg" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <AlertCircle size={12} /> {error}
           </motion.p>
         )}
@@ -87,11 +84,7 @@ function Field({ id, label, icon: Icon, error, children }) {
 
 function SkillSelector({ skills, selected, onChange }) {
   const toggle = (id) => {
-    onChange(
-      selected.includes(id)
-        ? selected.filter((skillId) => skillId !== id)
-        : [...selected, id]
-    );
+    onChange(selected.includes(id) ? selected.filter((skillId) => skillId !== id) : [...selected, id]);
   };
 
   if (!skills.length) {
@@ -237,6 +230,57 @@ function FileDropZone({ files, onChange }) {
   );
 }
 
+function ExistingFiles({ files }) {
+  if (!files.length) return null;
+
+  return (
+    <div style={{ ...GLASS, padding: "24px 28px" }}>
+      <p style={SECTION_TITLE}>Existing Uploaded Files ({files.length})</p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {files.map((file) => {
+          const fileUrl = file.imageUrl?.startsWith("http")
+            ? file.imageUrl
+            : `${API_URL}${file.imageUrl}`;
+
+          const fileName = file.imageUrl?.split("/").pop() || "Uploaded file";
+          const lower = fileName.toLowerCase();
+          const isImage = lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg");
+
+          return (
+            <a
+              key={file.id}
+              href={fileUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 12px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--bg-input)",
+                border: "1px solid var(--border-input)",
+                color: "var(--text-secondary)",
+                textDecoration: "none",
+                fontSize: 13,
+              }}
+            >
+              {isImage ? <ImageIcon size={15} /> : <FileText size={15} />}
+
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {fileName}
+              </span>
+
+              <span style={{ fontSize: 12, color: "var(--text-link)" }}>Open</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function EmployeeForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -246,6 +290,7 @@ export default function EmployeeForm() {
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [files, setFiles] = useState([]);
+  const [existingFiles, setExistingFiles] = useState([]);
 
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -284,6 +329,8 @@ export default function EmployeeForm() {
             departmentId: employee.departmentId || employee.department?.id || "",
             skillIds: employee.employeeSkills?.map((item) => item.skillId || item.skill?.id) || [],
           });
+
+          setExistingFiles(employee.images || []);
         }
       } catch (error) {
         push(error.message, "error");
@@ -346,18 +393,13 @@ export default function EmployeeForm() {
       }
 
       if (files.length && savedId) {
-  try {
-   uploadEmployeeFiles(savedId, files)
-  .then(() => {
-    push(`${files.length} file(s) uploaded.`, "success");
-  })
-  .catch((uploadError) => {
-    push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
-  });
-  } catch (uploadError) {
-    push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
-  }
-}
+        try {
+          await uploadEmployeeFiles(savedId, files);
+          push(`${files.length} file(s) uploaded.`, "success");
+        } catch (uploadError) {
+          push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
+        }
+      }
 
       navigate("/employees");
     } catch (error) {
@@ -386,12 +428,19 @@ export default function EmployeeForm() {
 
       <div style={{ paddingTop: 64, position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ marginBottom: 32 }}
-          >
-            <Link to="/employees" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)", marginBottom: 14, fontWeight: 500 }}>
+          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
+            <Link
+              to="/employees"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 13,
+                color: "var(--text-secondary)",
+                marginBottom: 14,
+                fontWeight: 500,
+              }}
+            >
               <ArrowLeft size={14} /> Back to Employees
             </Link>
 
@@ -473,6 +522,8 @@ export default function EmployeeForm() {
                   onChange={(ids) => setForm((prev) => ({ ...prev, skillIds: ids }))}
                 />
               </div>
+
+              {isEdit && <ExistingFiles files={existingFiles} />}
 
               <div style={{ ...GLASS, padding: "24px 28px" }}>
                 <p style={SECTION_TITLE}>Documents & Photos ({files.length}/5)</p>
