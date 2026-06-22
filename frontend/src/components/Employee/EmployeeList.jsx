@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   Users,
   Search,
@@ -203,6 +204,8 @@ function DeleteModal({ employee, onConfirm, onCancel, busy }) {
 export default function EmployeeList() {
   const { push } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -241,8 +244,7 @@ export default function EmployeeList() {
         emp.user?.email?.toLowerCase().includes(q) ||
         emp.designation?.toLowerCase().includes(q);
 
-      const matchDept =
-        !deptFilter || emp.department?.departmentName === deptFilter;
+      const matchDept = !deptFilter || emp.department?.departmentName === deptFilter;
 
       return matchSearch && matchDept;
     });
@@ -312,13 +314,15 @@ export default function EmployeeList() {
               </p>
             </div>
 
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-              <Link to="/employees/create" style={{ textDecoration: "none" }}>
-                <button className="btn-primary" style={{ width: "auto", padding: "0 20px", height: 44 }}>
-                  <Plus size={16} /> Add Employee
-                </button>
-              </Link>
-            </motion.div>
+            {isAdmin && (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                <Link to="/employees/create" style={{ textDecoration: "none" }}>
+                  <button className="btn-primary" style={{ width: "auto", padding: "0 20px", height: 44 }}>
+                    <Plus size={16} /> Add Employee
+                  </button>
+                </Link>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div
@@ -456,10 +460,10 @@ export default function EmployeeList() {
               </p>
 
               <p style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 24 }}>
-                {search || deptFilter ? "Try adjusting your search or filter." : "Add your first employee to get started."}
+                {search || deptFilter ? "Try adjusting your search or filter." : "No employee records available yet."}
               </p>
 
-              {!(search || deptFilter) && (
+              {isAdmin && !(search || deptFilter) && (
                 <Link to="/employees/create" style={{ textDecoration: "none" }}>
                   <button className="btn-primary" style={{ width: "auto", padding: "0 24px", height: 44, margin: "0 auto" }}>
                     <Plus size={15} /> Add First Employee
@@ -554,18 +558,23 @@ export default function EmployeeList() {
                         onClick={() => navigate(`/employees/${id}`)}
                         color="#5b6ef5"
                       />
-                      <ActionBtn
-                        icon={<Pencil size={14} />}
-                        title="Edit"
-                        onClick={() => navigate(`/employees/edit/${id}`)}
-                        color="#8b5cf6"
-                      />
-                      <ActionBtn
-                        icon={<Trash2 size={14} />}
-                        title="Delete"
-                        onClick={() => setToDelete(emp)}
-                        color="#ef4444"
-                      />
+
+                      {isAdmin && (
+                        <>
+                          <ActionBtn
+                            icon={<Pencil size={14} />}
+                            title="Edit"
+                            onClick={() => navigate(`/employees/edit/${id}`)}
+                            color="#8b5cf6"
+                          />
+                          <ActionBtn
+                            icon={<Trash2 size={14} />}
+                            title="Delete"
+                            onClick={() => setToDelete(emp)}
+                            color="#ef4444"
+                          />
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -575,7 +584,14 @@ export default function EmployeeList() {
         </div>
       </div>
 
-      <DeleteModal employee={toDelete} onConfirm={handleDelete} onCancel={() => setToDelete(null)} busy={deleting} />
+      {isAdmin && (
+        <DeleteModal
+          employee={toDelete}
+          onConfirm={handleDelete}
+          onCancel={() => setToDelete(null)}
+          busy={deleting}
+        />
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import Settings from "../components/Layout/Settings";
 import EmployeeList from "../components/Employee/EmployeeList";
 import CreateEmployee from "../components/Employee/CreateEmployee";
 import EditEmployee from "../components/Employee/EditEmployee";
+import EmployeeDetails from "../components/Employee/EmployeeDetails";
 
 import DepartmentMaster from "../components/Masters/DepartmentMaster";
 import SkillsMaster from "../components/Masters/SkillsMaster";
@@ -48,7 +49,9 @@ function NotFound() {
       <h1 style={{ fontSize: 64, fontWeight: 800, letterSpacing: "-2px", opacity: 0.2 }}>
         404
       </h1>
+
       <p style={{ color: "var(--text-secondary)" }}>Page not found</p>
+
       <a href="/login" style={{ color: "var(--text-link)", fontSize: 14, fontWeight: 500 }}>
         ← Back to login
       </a>
@@ -131,6 +134,17 @@ export default function AppRouter() {
         />
 
         <Route
+          path="/employees/:id"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <EmployeeDetails />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/employees/edit/:id"
           element={
             <ProtectedRoute>
@@ -196,7 +210,14 @@ export default function AppRouter() {
           }
         />
 
-        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        <Route
+          path="*"
+          element={
+            <PageTransition>
+              <NotFound />
+            </PageTransition>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Building2,
@@ -8,6 +9,7 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
+
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../Layout/Navbar";
 import AuthBackground from "../UI/AuthBackground";
@@ -56,30 +58,34 @@ export default function Dashboard() {
     {
       label: "Total Employees",
       value: stats.totalEmployees,
-      growth: "Live",
+      growth: "Open",
       icon: Users,
       color: "#5b6ef5",
+      path: "/employees",
     },
     {
       label: "Departments",
       value: stats.totalDepartments,
-      growth: "Live",
+      growth: "Open",
       icon: Building2,
       color: "#8b5cf6",
+      path: "/departments",
     },
     {
       label: "Active Skills",
       value: stats.totalSkills,
-      growth: "Live",
+      growth: "Open",
       icon: Zap,
       color: "#06b6d4",
+      path: "/skills",
     },
     {
       label: "Uploaded Files",
       value: stats.totalImages,
-      growth: "Live",
+      growth: "Open",
       icon: ImageIcon,
       color: "#f59e0b",
+      path: "/employees",
     },
   ];
 
@@ -131,9 +137,9 @@ export default function Dashboard() {
             animate="visible"
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
           >
-            <PlaceholderWidget title="Department Distribution" height={220} />
-            <PlaceholderWidget title="Skills Overview" height={220} />
-            <PlaceholderWidget title="Recent Employees" height={180} span={2} />
+            <PlaceholderWidget title="Department Distribution" height={220} path="/departments" />
+            <PlaceholderWidget title="Skills Overview" height={220} path="/skills" />
+            <PlaceholderWidget title="Recent Employees" height={180} span={2} path="/employees" />
           </motion.div>
         </div>
       </div>
@@ -141,12 +147,16 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value, growth, icon: Icon, color }) {
+function StatCard({ label, value, growth, icon: Icon, color, path }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       variants={cardVariants}
       whileHover={{ y: -3, scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
+      onClick={() => navigate(path)}
       style={{
         background: "var(--bg-card)",
         backdropFilter: "blur(24px)",
@@ -155,7 +165,7 @@ function StatCard({ label, value, growth, icon: Icon, color }) {
         borderRadius: "var(--radius-lg)",
         padding: "22px 20px",
         boxShadow: "var(--glass-shadow)",
-        cursor: "default",
+        cursor: "pointer",
         position: "relative",
         overflow: "hidden",
       }}
@@ -195,9 +205,9 @@ function StatCard({ label, value, growth, icon: Icon, color }) {
           style={{
             fontSize: 11,
             fontWeight: 600,
-            color: "#22c55e",
-            background: "rgba(34,197,94,0.12)",
-            border: "1px solid rgba(34,197,94,0.2)",
+            color: "var(--text-link)",
+            background: "rgba(91,110,245,0.12)",
+            border: "1px solid rgba(91,110,245,0.2)",
             borderRadius: 99,
             padding: "2px 8px",
           }}
@@ -214,7 +224,9 @@ function StatCard({ label, value, growth, icon: Icon, color }) {
   );
 }
 
-function PlaceholderWidget({ title, height, span }) {
+function PlaceholderWidget({ title, height, span, path }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       variants={cardVariants}
@@ -236,6 +248,7 @@ function PlaceholderWidget({ title, height, span }) {
         <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{title}</p>
 
         <motion.button
+          onClick={() => navigate(path)}
           style={{
             display: "flex",
             alignItems: "center",

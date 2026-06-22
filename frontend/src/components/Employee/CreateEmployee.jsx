@@ -26,6 +26,7 @@ import {
   updateEmployee,
   getEmployee,
   uploadEmployeeFiles,
+  deleteEmployeeFile,
 } from "../../services/api";
 
 import { useToast } from "../../context/ToastContext";
@@ -65,15 +66,24 @@ const EMPTY = {
 function Field({ id, label, icon: Icon, error, children }) {
   return (
     <div className="form-group">
-      <label className="form-label" htmlFor={id}>{label}</label>
+      <label className="form-label" htmlFor={id}>
+        {label}
+      </label>
       <div className="input-wrapper">
-        <span className="input-icon"><Icon size={15} /></span>
+        <span className="input-icon">
+          <Icon size={15} />
+        </span>
         {children}
       </div>
 
       <AnimatePresence>
         {error && (
-          <motion.p className="error-msg" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <motion.p
+            className="error-msg"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
             <AlertCircle size={12} /> {error}
           </motion.p>
         )}
@@ -84,11 +94,19 @@ function Field({ id, label, icon: Icon, error, children }) {
 
 function SkillSelector({ skills, selected, onChange }) {
   const toggle = (id) => {
-    onChange(selected.includes(id) ? selected.filter((skillId) => skillId !== id) : [...selected, id]);
+    onChange(
+      selected.includes(id)
+        ? selected.filter((skillId) => skillId !== id)
+        : [...selected, id]
+    );
   };
 
   if (!skills.length) {
-    return <p style={{ fontSize: 13, color: "var(--text-muted)" }}>No skills available.</p>;
+    return (
+      <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        No skills available.
+      </p>
+    );
   }
 
   return (
@@ -111,11 +129,15 @@ function SkillSelector({ skills, selected, onChange }) {
               fontWeight: 500,
               cursor: "pointer",
               background: active ? "rgba(91,110,245,0.18)" : "var(--bg-input)",
-              border: active ? "1px solid rgba(91,110,245,0.5)" : "1px solid var(--border-input)",
+              border: active
+                ? "1px solid rgba(91,110,245,0.5)"
+                : "1px solid var(--border-input)",
               color: active ? "var(--text-link)" : "var(--text-secondary)",
             }}
           >
-            {active && <Check size={11} style={{ marginRight: 4, verticalAlign: "middle" }} />}
+            {active && (
+              <Check size={11} style={{ marginRight: 4, verticalAlign: "middle" }} />
+            )}
             {skill.skillName}
           </motion.button>
         );
@@ -134,7 +156,12 @@ function FileDropZone({ files, onChange }) {
 
     for (const file of incoming) {
       if (merged.length >= MAX) break;
-      if (!merged.find((existing) => existing.name === file.name && existing.size === file.size)) {
+
+      if (
+        !merged.find(
+          (existing) => existing.name === file.name && existing.size === file.size
+        )
+      ) {
         merged.push(file);
       }
     }
@@ -170,14 +197,19 @@ function FileDropZone({ files, onChange }) {
           marginBottom: 12,
         }}
       >
-        <Upload size={22} style={{ color: "var(--text-muted)", margin: "0 auto 8px" }} />
+        <Upload
+          size={22}
+          style={{ color: "var(--text-muted)", margin: "0 auto 8px" }}
+        />
 
         <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-          {files.length < MAX ? "Drag & drop files here, or browse" : `Maximum ${MAX} files reached`}
+          {files.length < MAX
+            ? "Drag & drop files here, or browse"
+            : `Maximum ${MAX} files reached`}
         </p>
 
         <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
-          Photos, Aadhaar, Resume, Certificates — max {MAX} files
+          Photos, Aadhaar, Resume, Certificates, max {MAX} files
         </p>
 
         <input
@@ -209,7 +241,11 @@ function FileDropZone({ files, onChange }) {
             }}
           >
             <span style={{ color: "var(--text-link)" }}>
-              {file.type.startsWith("image/") ? <ImageIcon size={14} /> : <FileText size={14} />}
+              {file.type.startsWith("image/") ? (
+                <ImageIcon size={14} />
+              ) : (
+                <FileText size={14} />
+              )}
             </span>
 
             <span style={{ flex: 1, fontSize: 12, color: "var(--text-secondary)" }}>
@@ -219,7 +255,12 @@ function FileDropZone({ files, onChange }) {
             <button
               type="button"
               onClick={() => removeFile(index)}
-              style={{ color: "var(--text-error)", cursor: "pointer" }}
+              style={{
+                color: "var(--text-error)",
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+              }}
             >
               <X size={14} />
             </button>
@@ -230,7 +271,7 @@ function FileDropZone({ files, onChange }) {
   );
 }
 
-function ExistingFiles({ files }) {
+function ExistingFiles({ files, onDelete }) {
   if (!files.length) return null;
 
   return (
@@ -245,14 +286,14 @@ function ExistingFiles({ files }) {
 
           const fileName = file.imageUrl?.split("/").pop() || "Uploaded file";
           const lower = fileName.toLowerCase();
-          const isImage = lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg");
+          const isImage =
+            lower.endsWith(".png") ||
+            lower.endsWith(".jpg") ||
+            lower.endsWith(".jpeg");
 
           return (
-            <a
+            <div
               key={file.id}
-              href={fileUrl}
-              target="_blank"
-              rel="noreferrer"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -262,18 +303,51 @@ function ExistingFiles({ files }) {
                 background: "var(--bg-input)",
                 border: "1px solid var(--border-input)",
                 color: "var(--text-secondary)",
-                textDecoration: "none",
                 fontSize: 13,
               }}
             >
               {isImage ? <ImageIcon size={15} /> : <FileText size={15} />}
 
-              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {fileName}
               </span>
 
-              <span style={{ fontSize: 12, color: "var(--text-link)" }}>Open</span>
-            </a>
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-link)",
+                  textDecoration: "none",
+                }}
+              >
+                Open
+              </a>
+
+              <button
+                type="button"
+                onClick={() => onDelete(file.id)}
+                style={{
+                  color: "var(--text-error)",
+                  cursor: "pointer",
+                  background: "transparent",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                title="Delete file"
+              >
+                <X size={15} />
+              </button>
+            </div>
           );
         })}
       </div>
@@ -301,7 +375,10 @@ export default function EmployeeForm() {
 
   const set = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
-    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
+
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: "" }));
+    }
   };
 
   useEffect(() => {
@@ -327,7 +404,9 @@ export default function EmployeeForm() {
             designation: employee.designation || "",
             salary: employee.salary != null ? String(employee.salary) : "",
             departmentId: employee.departmentId || employee.department?.id || "",
-            skillIds: employee.employeeSkills?.map((item) => item.skillId || item.skill?.id) || [],
+            skillIds:
+              employee.employeeSkills?.map((item) => item.skillId || item.skill?.id) ||
+              [],
           });
 
           setExistingFiles(employee.images || []);
@@ -349,12 +428,24 @@ export default function EmployeeForm() {
     if (!form.departmentId) e.departmentId = "Please select a department";
     if (!form.phone.trim()) e.phone = "Phone number is required";
     if (!form.designation.trim()) e.designation = "Designation is required";
-    if (!form.salary) e.salary = "Salary is required";
-    else if (isNaN(Number(form.salary)) || Number(form.salary) <= 0) {
+
+    if (!form.salary) {
+      e.salary = "Salary is required";
+    } else if (isNaN(Number(form.salary)) || Number(form.salary) <= 0) {
       e.salary = "Enter a valid salary";
     }
 
     return e;
+  }
+
+  async function handleDeleteExistingFile(fileId) {
+    try {
+      await deleteEmployeeFile(fileId);
+      setExistingFiles((prev) => prev.filter((file) => file.id !== fileId));
+      push("File removed successfully.", "success");
+    } catch (error) {
+      push(error.message, "error");
+    }
   }
 
   async function handleSubmit(e) {
@@ -397,7 +488,10 @@ export default function EmployeeForm() {
           await uploadEmployeeFiles(savedId, files);
           push(`${files.length} file(s) uploaded.`, "success");
         } catch (uploadError) {
-          push(`Employee saved, but file upload failed: ${uploadError.message}`, "error");
+          push(
+            `Employee saved, but file upload failed: ${uploadError.message}`,
+            "error"
+          );
         }
       }
 
@@ -411,24 +505,55 @@ export default function EmployeeForm() {
 
   if (fetching) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-page)", position: "relative" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--bg-page)",
+          position: "relative",
+        }}
+      >
         <AuthBackground />
         <Navbar />
-        <div style={{ paddingTop: 64, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}>
-          <Loader2 size={28} style={{ animation: "spin 0.8s linear infinite", color: "var(--text-link)" }} />
+
+        <div
+          style={{
+            paddingTop: 64,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "80vh",
+          }}
+        >
+          <Loader2
+            size={28}
+            style={{
+              animation: "spin 0.8s linear infinite",
+              color: "var(--text-link)",
+            }}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-page)", position: "relative" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-page)",
+        position: "relative",
+      }}
+    >
       <AuthBackground />
       <Navbar />
 
       <div style={{ paddingTop: 64, position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px" }}>
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ marginBottom: 32 }}
+          >
             <Link
               to="/employees"
               style={{
@@ -444,7 +569,10 @@ export default function EmployeeForm() {
               <ArrowLeft size={14} /> Back to Employees
             </Link>
 
-            <span className="dashboard-badge" style={{ marginBottom: 10, display: "flex", width: "fit-content" }}>
+            <span
+              className="dashboard-badge"
+              style={{ marginBottom: 10, display: "flex", width: "fit-content" }}
+            >
               <User size={11} /> {isEdit ? "Edit Employee" : "New Employee"}
             </span>
 
@@ -458,9 +586,16 @@ export default function EmployeeForm() {
               <div style={{ ...GLASS, padding: "24px 28px" }}>
                 <p style={SECTION_TITLE}>Employee Information</p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "0 20px",
+                  }}
+                >
                   <div className="form-group">
                     <label className="form-label">Select User *</label>
+
                     <select
                       className={`form-input${errors.userId ? " error" : ""}`}
                       value={form.userId}
@@ -468,47 +603,90 @@ export default function EmployeeForm() {
                       disabled={isEdit}
                     >
                       <option value="">Select user...</option>
+
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name} ({user.email})
                         </option>
                       ))}
                     </select>
-                    {errors.userId && <p className="error-msg"><AlertCircle size={12} /> {errors.userId}</p>}
+
+                    {errors.userId && (
+                      <p className="error-msg">
+                        <AlertCircle size={12} /> {errors.userId}
+                      </p>
+                    )}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Department *</label>
+
                     <select
-                      className={`form-input${errors.departmentId ? " error" : ""}`}
+                      className={`form-input${
+                        errors.departmentId ? " error" : ""
+                      }`}
                       value={form.departmentId}
                       onChange={set("departmentId")}
                     >
                       <option value="">Select department...</option>
+
                       {departments.map((department) => (
                         <option key={department.id} value={department.id}>
                           {department.departmentName}
                         </option>
                       ))}
                     </select>
-                    {errors.departmentId && <p className="error-msg"><AlertCircle size={12} /> {errors.departmentId}</p>}
+
+                    {errors.departmentId && (
+                      <p className="error-msg">
+                        <AlertCircle size={12} /> {errors.departmentId}
+                      </p>
+                    )}
                   </div>
 
                   <Field id="phone" label="Phone Number *" icon={Phone} error={errors.phone}>
-                    <input id="phone" className={`form-input${errors.phone ? " error" : ""}`} value={form.phone} onChange={set("phone")} />
+                    <input
+                      id="phone"
+                      className={`form-input${errors.phone ? " error" : ""}`}
+                      value={form.phone}
+                      onChange={set("phone")}
+                    />
                   </Field>
 
                   <Field id="salary" label="Salary *" icon={DollarSign} error={errors.salary}>
-                    <input id="salary" type="number" className={`form-input${errors.salary ? " error" : ""}`} value={form.salary} onChange={set("salary")} />
+                    <input
+                      id="salary"
+                      type="number"
+                      className={`form-input${errors.salary ? " error" : ""}`}
+                      value={form.salary}
+                      onChange={set("salary")}
+                    />
                   </Field>
 
-                  <Field id="designation" label="Designation *" icon={Briefcase} error={errors.designation}>
-                    <input id="designation" className={`form-input${errors.designation ? " error" : ""}`} value={form.designation} onChange={set("designation")} />
+                  <Field
+                    id="designation"
+                    label="Designation *"
+                    icon={Briefcase}
+                    error={errors.designation}
+                  >
+                    <input
+                      id="designation"
+                      className={`form-input${
+                        errors.designation ? " error" : ""
+                      }`}
+                      value={form.designation}
+                      onChange={set("designation")}
+                    />
                   </Field>
 
                   <div style={{ gridColumn: "1 / -1" }}>
                     <Field id="address" label="Address" icon={MapPin} error={errors.address}>
-                      <input id="address" className="form-input" value={form.address} onChange={set("address")} />
+                      <input
+                        id="address"
+                        className="form-input"
+                        value={form.address}
+                        onChange={set("address")}
+                      />
                     </Field>
                   </div>
                 </div>
@@ -516,28 +694,46 @@ export default function EmployeeForm() {
 
               <div style={{ ...GLASS, padding: "24px 28px" }}>
                 <p style={SECTION_TITLE}>Skills ({form.skillIds.length} selected)</p>
+
                 <SkillSelector
                   skills={skills}
                   selected={form.skillIds}
-                  onChange={(ids) => setForm((prev) => ({ ...prev, skillIds: ids }))}
+                  onChange={(ids) =>
+                    setForm((prev) => ({ ...prev, skillIds: ids }))
+                  }
                 />
               </div>
 
-              {isEdit && <ExistingFiles files={existingFiles} />}
+              {isEdit && (
+                <ExistingFiles
+                  files={existingFiles}
+                  onDelete={handleDeleteExistingFile}
+                />
+              )}
 
               <div style={{ ...GLASS, padding: "24px 28px" }}>
                 <p style={SECTION_TITLE}>Documents & Photos ({files.length}/5)</p>
+
                 <FileDropZone files={files} onChange={setFiles} />
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
                 <Link to="/employees" style={{ textDecoration: "none" }}>
-                  <button type="button" className="btn-ghost" style={{ width: "auto", padding: "0 24px", height: 46 }}>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    style={{ width: "auto", padding: "0 24px", height: 46 }}
+                  >
                     Cancel
                   </button>
                 </Link>
 
-                <button type="submit" className="btn-primary" disabled={loading} style={{ width: "auto", padding: "0 28px", height: 46 }}>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={loading}
+                  style={{ width: "auto", padding: "0 28px", height: 46 }}
+                >
                   {loading ? "Saving..." : isEdit ? "Save Changes" : "Create Employee"}
                 </button>
               </div>

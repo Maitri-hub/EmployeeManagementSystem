@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Loader2,
   Search,
+  Lock,
 } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ import {
 } from "../../services/api";
 
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 import Navbar from "../Layout/Navbar";
 import AuthBackground from "../UI/AuthBackground";
 
@@ -76,6 +78,7 @@ const modalVariants = {
 function IconBtn({ icon, title, onClick, color, disabled }) {
   return (
     <motion.button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -180,6 +183,8 @@ function SkeletonRow() {
 
 export default function SkillsMaster() {
   const { push } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
 
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -222,6 +227,7 @@ export default function SkillsMaster() {
 
   async function handleAdd(e) {
     e.preventDefault();
+    if (!isAdmin) return;
 
     const skillName = addName.trim();
 
@@ -230,9 +236,7 @@ export default function SkillsMaster() {
       return;
     }
 
-    if (
-      skills.some((skill) => skill.skillName?.toLowerCase() === skillName.toLowerCase())
-    ) {
+    if (skills.some((skill) => skill.skillName?.toLowerCase() === skillName.toLowerCase())) {
       setAddErr("This skill already exists.");
       return;
     }
@@ -253,6 +257,7 @@ export default function SkillsMaster() {
   }
 
   function startEdit(skill) {
+    if (!isAdmin) return;
     setEditRow(skill);
     setEditName(skill.skillName || "");
   }
@@ -264,6 +269,7 @@ export default function SkillsMaster() {
 
   async function handleEdit(e) {
     e?.preventDefault();
+    if (!isAdmin) return;
 
     const skillName = editName.trim();
     const id = editRow.id;
@@ -288,6 +294,8 @@ export default function SkillsMaster() {
   }
 
   async function handleDelete() {
+    if (!isAdmin || !toDelete) return;
+
     const id = toDelete.id;
     const name = toDelete.skillName;
 
@@ -331,60 +339,71 @@ export default function SkillsMaster() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.06 }}
-            style={{ ...GLASS, padding: "22px 24px", marginBottom: 20 }}
-          >
-            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 14 }}>
-              Add New Skill
-            </p>
+          {!isAdmin && (
+            <div style={{ ...GLASS, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+              <Lock size={15} style={{ color: "var(--text-muted)" }} />
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                View-only access. Only admin can add, edit, or delete skills.
+              </p>
+            </div>
+          )}
 
-            <form onSubmit={handleAdd} noValidate>
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div className="input-wrapper">
-                    <span className="input-icon">
-                      <Zap size={15} />
-                    </span>
+          {isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.06 }}
+              style={{ ...GLASS, padding: "22px 24px", marginBottom: 20 }}
+            >
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 14 }}>
+                Add New Skill
+              </p>
 
-                    <input
-                      type="text"
-                      className={`form-input${addErr ? " error" : ""}`}
-                      placeholder="e.g. React.js, Project Management, Python…"
-                      value={addName}
-                      onChange={(e) => {
-                        setAddName(e.target.value);
-                        setAddErr("");
-                      }}
-                      disabled={addBusy}
-                      style={{ height: 44 }}
-                    />
+              <form onSubmit={handleAdd} noValidate>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="input-wrapper">
+                      <span className="input-icon">
+                        <Zap size={15} />
+                      </span>
+
+                      <input
+                        type="text"
+                        className={`form-input${addErr ? " error" : ""}`}
+                        placeholder="e.g. React.js, Project Management, Python…"
+                        value={addName}
+                        onChange={(e) => {
+                          setAddName(e.target.value);
+                          setAddErr("");
+                        }}
+                        disabled={addBusy}
+                        style={{ height: 44 }}
+                      />
+                    </div>
+
+                    {addErr && (
+                      <p className="error-msg">
+                        <AlertCircle size={12} /> {addErr}
+                      </p>
+                    )}
                   </div>
 
-                  {addErr && (
-                    <p className="error-msg">
-                      <AlertCircle size={12} /> {addErr}
-                    </p>
-                  )}
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={addBusy}
+                    style={{ width: "auto", padding: "0 20px", height: 44 }}
+                  >
+                    {addBusy ? "Adding…" : (
+                      <>
+                        <Plus size={15} /> Add Skill
+                      </>
+                    )}
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={addBusy}
-                  style={{ width: "auto", padding: "0 20px", height: 44 }}
-                >
-                  {addBusy ? "Adding…" : (
-                    <>
-                      <Plus size={15} /> Add Skill
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
+              </form>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -458,7 +477,7 @@ export default function SkillsMaster() {
                           minHeight: 56,
                         }}
                       >
-                        {!isEditing && (
+                        {!(isAdmin && isEditing) && (
                           <span
                             style={{
                               flexShrink: 0,
@@ -476,7 +495,7 @@ export default function SkillsMaster() {
                           </span>
                         )}
 
-                        {isEditing ? (
+                        {isAdmin && isEditing ? (
                           <form
                             onSubmit={handleEdit}
                             style={{ flex: 1, display: "flex", gap: 8, alignItems: "center" }}
@@ -513,21 +532,23 @@ export default function SkillsMaster() {
                               #{String(idx + 1).padStart(3, "0")}
                             </span>
 
-                            <div style={{ display: "flex", gap: 6 }}>
-                              <IconBtn
-                                icon={<Pencil size={14} />}
-                                title="Edit"
-                                onClick={() => startEdit(skill)}
-                                color="#8b5cf6"
-                              />
+                            {isAdmin && (
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <IconBtn
+                                  icon={<Pencil size={14} />}
+                                  title="Edit"
+                                  onClick={() => startEdit(skill)}
+                                  color="#8b5cf6"
+                                />
 
-                              <IconBtn
-                                icon={<Trash2 size={14} />}
-                                title="Delete"
-                                onClick={() => setToDelete(skill)}
-                                color="#ef4444"
-                              />
-                            </div>
+                                <IconBtn
+                                  icon={<Trash2 size={14} />}
+                                  title="Delete"
+                                  onClick={() => setToDelete(skill)}
+                                  color="#ef4444"
+                                />
+                              </div>
+                            )}
                           </>
                         )}
                       </motion.div>
@@ -556,12 +577,14 @@ export default function SkillsMaster() {
         </div>
       </div>
 
-      <DeleteModal
-        skill={toDelete}
-        onConfirm={handleDelete}
-        onCancel={() => setToDelete(null)}
-        busy={delBusy}
-      />
+      {isAdmin && (
+        <DeleteModal
+          skill={toDelete}
+          onConfirm={handleDelete}
+          onCancel={() => setToDelete(null)}
+          busy={delBusy}
+        />
+      )}
     </div>
   );
 }

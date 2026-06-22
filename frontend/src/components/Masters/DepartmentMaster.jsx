@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Loader2,
   Search,
+  Lock,
 } from "lucide-react";
 
 import {
@@ -20,6 +21,7 @@ import {
 } from "../../services/api";
 
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 import Navbar from "../Layout/Navbar";
 import AuthBackground from "../UI/AuthBackground";
 
@@ -67,6 +69,7 @@ const modalVariants = {
 function IconBtn({ icon, title, onClick, color, disabled }) {
   return (
     <motion.button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -170,6 +173,8 @@ function SkeletonRow() {
 
 export default function DepartmentMaster() {
   const { push } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
 
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -212,6 +217,7 @@ export default function DepartmentMaster() {
 
   async function handleAdd(e) {
     e.preventDefault();
+    if (!isAdmin) return;
 
     const departmentName = addName.trim();
 
@@ -245,6 +251,7 @@ export default function DepartmentMaster() {
   }
 
   function startEdit(dept) {
+    if (!isAdmin) return;
     setEditRow(dept);
     setEditName(dept.departmentName || "");
   }
@@ -256,6 +263,7 @@ export default function DepartmentMaster() {
 
   async function handleEdit(e) {
     e.preventDefault();
+    if (!isAdmin) return;
 
     const departmentName = editName.trim();
     const id = editRow.id;
@@ -282,6 +290,8 @@ export default function DepartmentMaster() {
   }
 
   async function handleDelete() {
+    if (!isAdmin || !toDelete) return;
+
     const id = toDelete.id;
     const name = toDelete.departmentName;
 
@@ -325,60 +335,71 @@ export default function DepartmentMaster() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.06 }}
-            style={{ ...GLASS, padding: "22px 24px", marginBottom: 20 }}
-          >
-            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 14 }}>
-              Add New Department
-            </p>
+          {!isAdmin && (
+            <div style={{ ...GLASS, padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+              <Lock size={15} style={{ color: "var(--text-muted)" }} />
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                View-only access. Only admin can add, edit, or delete departments.
+              </p>
+            </div>
+          )}
 
-            <form onSubmit={handleAdd} noValidate>
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div className="input-wrapper">
-                    <span className="input-icon">
-                      <Building2 size={15} />
-                    </span>
+          {isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.06 }}
+              style={{ ...GLASS, padding: "22px 24px", marginBottom: 20 }}
+            >
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 14 }}>
+                Add New Department
+              </p>
 
-                    <input
-                      type="text"
-                      className={`form-input${addErr ? " error" : ""}`}
-                      placeholder="e.g. Engineering, Marketing, Finance…"
-                      value={addName}
-                      onChange={(e) => {
-                        setAddName(e.target.value);
-                        setAddErr("");
-                      }}
-                      disabled={addBusy}
-                      style={{ height: 44 }}
-                    />
+              <form onSubmit={handleAdd} noValidate>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <div className="input-wrapper">
+                      <span className="input-icon">
+                        <Building2 size={15} />
+                      </span>
+
+                      <input
+                        type="text"
+                        className={`form-input${addErr ? " error" : ""}`}
+                        placeholder="e.g. Engineering, Marketing, Finance…"
+                        value={addName}
+                        onChange={(e) => {
+                          setAddName(e.target.value);
+                          setAddErr("");
+                        }}
+                        disabled={addBusy}
+                        style={{ height: 44 }}
+                      />
+                    </div>
+
+                    {addErr && (
+                      <p className="error-msg">
+                        <AlertCircle size={12} /> {addErr}
+                      </p>
+                    )}
                   </div>
 
-                  {addErr && (
-                    <p className="error-msg">
-                      <AlertCircle size={12} /> {addErr}
-                    </p>
-                  )}
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={addBusy}
+                    style={{ width: "auto", padding: "0 20px", height: 44 }}
+                  >
+                    {addBusy ? "Adding…" : (
+                      <>
+                        <Plus size={15} /> Add Department
+                      </>
+                    )}
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={addBusy}
-                  style={{ width: "auto", padding: "0 20px", height: 44 }}
-                >
-                  {addBusy ? "Adding…" : (
-                    <>
-                      <Plus size={15} /> Add Department
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
+              </form>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -469,7 +490,7 @@ export default function DepartmentMaster() {
                           {String(idx + 1).padStart(2, "0")}
                         </div>
 
-                        {isEditing ? (
+                        {isAdmin && isEditing ? (
                           <form
                             onSubmit={handleEdit}
                             style={{ flex: 1, display: "flex", gap: 8, alignItems: "center" }}
@@ -506,21 +527,23 @@ export default function DepartmentMaster() {
                               {dept.departmentName}
                             </p>
 
-                            <div style={{ display: "flex", gap: 6 }}>
-                              <IconBtn
-                                icon={<Pencil size={14} />}
-                                title="Edit"
-                                onClick={() => startEdit(dept)}
-                                color="#8b5cf6"
-                              />
+                            {isAdmin && (
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <IconBtn
+                                  icon={<Pencil size={14} />}
+                                  title="Edit"
+                                  onClick={() => startEdit(dept)}
+                                  color="#8b5cf6"
+                                />
 
-                              <IconBtn
-                                icon={<Trash2 size={14} />}
-                                title="Delete"
-                                onClick={() => setToDelete(dept)}
-                                color="#ef4444"
-                              />
-                            </div>
+                                <IconBtn
+                                  icon={<Trash2 size={14} />}
+                                  title="Delete"
+                                  onClick={() => setToDelete(dept)}
+                                  color="#ef4444"
+                                />
+                              </div>
+                            )}
                           </>
                         )}
                       </motion.div>
@@ -549,12 +572,14 @@ export default function DepartmentMaster() {
         </div>
       </div>
 
-      <DeleteModal
-        dept={toDelete}
-        onConfirm={handleDelete}
-        onCancel={() => setToDelete(null)}
-        busy={delBusy}
-      />
+      {isAdmin && (
+        <DeleteModal
+          dept={toDelete}
+          onConfirm={handleDelete}
+          onCancel={() => setToDelete(null)}
+          busy={delBusy}
+        />
+      )}
     </div>
   );
 }

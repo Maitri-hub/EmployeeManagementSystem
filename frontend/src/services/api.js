@@ -128,4 +128,9 @@ export async function uploadEmployeeFiles(employeeId, files) {
   return body;
 }
 
+export const deleteEmployeeFile = (id) =>
+  request(`/api/employees/upload/${id}`, {
+    method: "DELETE",
+  });
+  
 export default BASE_URL;
