@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id                 Int                 @id @default(autoincrement())
-  name               String              @db.VarChar(100)
-  email              String              @unique @db.VarChar(100)
-  password           String              @db.VarChar(255)
-  created_at         DateTime?           @default(now()) @db.Timestamp(6)
-  verified           Boolean?            @default(false)
-  role               String?             @default("user") @db.VarChar(20)
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)
+  email      String    @unique @db.VarChar(100)
+  password   String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  verified   Boolean?  @default(false)
+  role       String?   @default("user") @db.VarChar(20)
+
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
   refreshTokens      RefreshToken[]
   employeeProfiles   EmployeeProfile[]
+  approvals          ApprovalHistory[]
 
   @@map("users")
 }
@@ -30,7 +32,8 @@ model PasswordReset {
   expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
   used      Boolean?  @default(false)
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("password_reset")
 }
@@ -42,7 +45,8 @@ model EmailVerification {
   expiresAt DateTime  @map("expires_at") @db.Timestamp(6)
   verified  Boolean?  @default(false)
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("email_verification")
 }
@@ -52,7 +56,8 @@ model RefreshToken {
   userId    Int?      @map("user_id")
   token     String
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("refresh_tokens")
 }
@@ -75,10 +80,12 @@ model EmployeeProfile {
   salary       Decimal?  @db.Decimal(10, 2)
   createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department     Department      @relation(fields: [departmentId], references: [id])
-  images         EmployeeImage[]
-  employeeSkills EmployeeSkill[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department        Department         @relation(fields: [departmentId], references: [id])
+  images            EmployeeImage[]
+  employeeSkills    EmployeeSkill[]
+  leaveBalances     LeaveBalance[]
+  leaveApplications LeaveApplication[]
 
   @@map("employee_profiles")
 }
@@ -110,4 +117,64 @@ model EmployeeSkill {
   skill    Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@map("employee_skills")
+}
+
+/**
+ * TASK 4 MODELS
+ */
+
+model LeaveType {
+  id        Int    @id @default(autoincrement())
+  leaveName String @map("leave_name") @db.VarChar(100)
+  totalDays Int    @map("total_days")
+
+  leaveBalances     LeaveBalance[]
+  leaveApplications LeaveApplication[]
+
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id            Int @id @default(autoincrement())
+  employeeId    Int @map("employee_id")
+  leaveTypeId   Int @map("leave_type_id")
+  availableDays Int @map("available_days")
+
+  employee  EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType       @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, leaveTypeId])
+  @@map("leave_balance")
+}
+
+model LeaveApplication {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int      @map("employee_id")
+  leaveTypeId Int      @map("leave_type_id")
+  fromDate    DateTime @map("from_date") @db.Date
+  toDate      DateTime @map("to_date") @db.Date
+  totalDays   Int      @map("total_days")
+  reason      String?
+  status      String   @default("Pending") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  employee        EmployeeProfile   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType       LeaveType         @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  approvalHistory ApprovalHistory[]
+
+  @@map("leave_applications")
+}
+
+model ApprovalHistory {
+  id         Int       @id @default(autoincrement())
+  leaveId    Int       @map("leave_id")
+  approvedBy Int       @map("approved_by")
+  action     String    @db.VarChar(20)
+  remarks    String?
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+
+  leave    LeaveApplication @relation(fields: [leaveId], references: [id], onDelete: Cascade)
+  approver User             @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
+
+  @@map("approval_history")
 }

@@ -1,4 +1,4 @@
-const BASE_URL = "https://employeemanagementsystem-lplz.onrender.com";
+const BASE_URL = "http://localhost:5000";
 
 export function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -29,12 +29,21 @@ async function request(path, options = {}) {
   return body;
 }
 
+/* =========================
+   DASHBOARD
+========================= */
 export const getDashboardStats = () =>
   request("/api/dashboard/stats");
 
+/* =========================
+   USERS
+========================= */
 export const getUsers = () =>
   request("/api/user/all");
 
+/* =========================
+   DEPARTMENTS
+========================= */
 export const getDepartments = () =>
   request("/api/departments");
 
@@ -44,7 +53,7 @@ export const createDepartment = (data) =>
     body: JSON.stringify(data),
   });
 
-  export const updateDepartment = (id, data) =>
+export const updateDepartment = (id, data) =>
   request(`/api/departments/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -55,6 +64,9 @@ export const deleteDepartment = (id) =>
     method: "DELETE",
   });
 
+/* =========================
+   SKILLS
+========================= */
 export const getSkills = () =>
   request("/api/skills");
 
@@ -64,7 +76,7 @@ export const createSkill = (data) =>
     body: JSON.stringify(data),
   });
 
-  export const updateSkill = (id, data) =>
+export const updateSkill = (id, data) =>
   request(`/api/skills/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
@@ -75,6 +87,9 @@ export const deleteSkill = (id) =>
     method: "DELETE",
   });
 
+/* =========================
+   EMPLOYEES
+========================= */
 export const getEmployees = () =>
   request("/api/employees");
 
@@ -98,6 +113,9 @@ export const deleteEmployee = (id) =>
     method: "DELETE",
   });
 
+/* =========================
+   EMPLOYEE FILE UPLOAD
+========================= */
 export async function uploadEmployeeFiles(employeeId, files) {
   const token = localStorage.getItem("token");
   const formData = new FormData();
@@ -132,5 +150,32 @@ export const deleteEmployeeFile = (id) =>
   request(`/api/employees/upload/${id}`, {
     method: "DELETE",
   });
-  
+
+/* =========================
+   LEAVE MANAGEMENT
+========================= */
+export const getLeaveTypes = () =>
+  request("/api/leaves/types");
+
+export const getLeaveBalances = () =>
+  request("/api/leaves/balances");
+
+export const getLeaveApplications = () =>
+  request("/api/leaves/applications");
+
+export const createLeaveApplication = (data) =>
+  request("/api/leaves/applications", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateLeaveStatus = (id, data) =>
+  request(`/api/leaves/applications/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const getLeaveDashboardStats = () =>
+  request("/api/leaves/dashboard/stats");
+
 export default BASE_URL;

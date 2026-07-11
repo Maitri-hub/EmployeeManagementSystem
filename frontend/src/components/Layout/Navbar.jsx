@@ -12,6 +12,9 @@ import {
   Users,
   Building2,
   Zap,
+  CalendarDays,
+  CalendarPlus,
+  WalletCards,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { Link, NavLink } from "react-router-dom";
@@ -35,7 +38,9 @@ export default function Navbar() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const dropRef = useRef(null);
 
-  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const role = user?.role?.toLowerCase();
+  const isAdmin = role === "admin";
+  const isApprover = ["admin", "manager", "hr"].includes(role);
 
   useEffect(() => {
     const handler = (e) => {
@@ -58,15 +63,7 @@ export default function Navbar() {
           WorkFlow
         </Link>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginLeft: 28,
-            flex: 1,
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 28, flex: 1 }}>
           <TopLink to="/dashboard" icon={<LayoutDashboard size={14} />} label="Dashboard" />
 
           {isAdmin && (
@@ -74,6 +71,18 @@ export default function Navbar() {
               <TopLink to="/employees" icon={<Users size={14} />} label="Employees" />
               <TopLink to="/departments" icon={<Building2 size={14} />} label="Departments" />
               <TopLink to="/skills" icon={<Zap size={14} />} label="Skills" />
+            </>
+          )}
+
+          {isApprover ? (
+            <>
+              <TopLink to="/leaves" icon={<CalendarDays size={14} />} label="Leave Requests" />
+              <TopLink to="/leaves/balances" icon={<WalletCards size={14} />} label="Balances" />
+            </>
+          ) : (
+            <>
+              <TopLink to="/leaves/apply" icon={<CalendarPlus size={14} />} label="Apply Leave" />
+              <TopLink to="/my-leaves" icon={<CalendarDays size={14} />} label="My Leaves" />
             </>
           )}
         </div>
@@ -122,15 +131,9 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
             >
-              <div className="avatar">
-                {user.initials || user.name?.slice(0, 2).toUpperCase()}
-              </div>
+              <div className="avatar">{user.initials || user.name?.slice(0, 2).toUpperCase()}</div>
               <span className="avatar-name">{user.name?.split(" ")[0]}</span>
-              <motion.span
-                className="avatar-chevron"
-                animate={{ rotate: open ? 180 : 0 }}
-                transition={{ duration: 0.22 }}
-              >
+              <motion.span className="avatar-chevron" animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }}>
                 <ChevronDown size={14} />
               </motion.span>
             </motion.button>
@@ -168,6 +171,26 @@ export default function Navbar() {
                         </Link>
                         <Link to="/skills" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
                           <DropItem icon={<Zap size={15} />} label="Skills" />
+                        </Link>
+                      </>
+                    )}
+
+                    {isApprover ? (
+                      <>
+                        <Link to="/leaves" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
+                          <DropItem icon={<CalendarDays size={15} />} label="Leave Requests" />
+                        </Link>
+                        <Link to="/leaves/balances" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
+                          <DropItem icon={<WalletCards size={15} />} label="Leave Balances" />
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/leaves/apply" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
+                          <DropItem icon={<CalendarPlus size={15} />} label="Apply Leave" />
+                        </Link>
+                        <Link to="/my-leaves" style={{ textDecoration: "none" }} onClick={() => setOpen(false)}>
+                          <DropItem icon={<CalendarDays size={15} />} label="My Leaves" />
                         </Link>
                       </>
                     )}
@@ -232,11 +255,7 @@ function TopLink({ to, icon, label }) {
 
 function DropItem({ icon, label, danger }) {
   return (
-    <motion.div
-      className={`dropdown-item${danger ? " danger" : ""}`}
-      whileHover={{ x: 2 }}
-      transition={{ duration: 0.15 }}
-    >
+    <motion.div className={`dropdown-item${danger ? " danger" : ""}`} whileHover={{ x: 2 }} transition={{ duration: 0.15 }}>
       {icon}
       {label}
     </motion.div>
